@@ -1,0 +1,59 @@
+# This YAML file describes your package. Stack will automatically generate a
+# Cabal file when you run `stack build`. See the hpack website for help with
+# this file: <https://github.com/sol/hpack>.
+benchmarks:
+  nutrition-benchmarks:
+    dependencies:
+    - base
+    - nutrition
+    - criterion
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    main: Main.hs
+    source-dirs: benchmark
+category: Other
+description: nutrition is a new Haskeleton package.
+executables:
+  nutrition:
+    dependencies:
+    - base
+    - nutrition
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    main: Main.hs
+    source-dirs: executable
+extra-source-files:
+- CHANGELOG.md
+- LICENSE.md
+- package.yaml
+- README.md
+- stack.yaml
+ghc-options: -Wall
+github: githubuser/nutrition
+library:
+  dependencies:
+  - base
+  - yaml
+  source-dirs: library
+license: MIT
+maintainer: Author name here
+name: nutrition
+synopsis: A new Haskeleton package.
+tests:
+  nutrition-test-suite:
+    dependencies:
+    - base
+    - nutrition
+    - tasty
+    - tasty-hspec
+    ghc-options:
+    - -rtsopts
+    - -threaded
+    - -with-rtsopts=-N
+    main: Main.hs
+    source-dirs: test-suite
+version: '0.0.0'
