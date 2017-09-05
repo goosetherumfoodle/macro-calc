@@ -38,6 +38,9 @@ library:
   dependencies:
   - base
   - yaml
+  - bytestring
+  - unix
+  - transformers
   source-dirs: library
 license: MIT
 maintainer: Author name here
