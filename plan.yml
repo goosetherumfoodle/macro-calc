@@ -1,0 +1,27 @@
+target:
+  protein: 215
+  carbs: 20
+  fat: 50
+  calories: 3600
+
+diet:
+  - name: horsemeat
+    calories: 100
+    protein: 30
+    carbs: 50
+    fat: 10
+    quantity: 4
+
+  - name: egg
+    calories: 200
+    protein: 50
+    carbs: 20
+    fat: 50
+    quantity: 3
+
+  - name: chicken
+    calories: 300
+    protein: 75
+    carbs: 34
+    fat: 74
+    quantity: 2
