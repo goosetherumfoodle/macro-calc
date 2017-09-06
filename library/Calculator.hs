@@ -10,8 +10,11 @@ import Data.ByteString hiding (readFile, putStrLn)
 import qualified Data.ByteString.Char8 as BS (readFile, putStrLn, pack)
 import Data.ByteString.Char8
 
+-- done:
 -- 1. read in target and actual numbers
 -- 2. add up actual numbers
+
+-- todo:
 -- 3. compare totals to target
 -- 4. print comparison
 
@@ -56,7 +59,7 @@ instance FromJSON Foodstuff where
     name     <- o .: "name"
     quantity <- o .: "quantity"
     return $ Foodstuff (Macros {
-                                calories = cals
+                                 calories = cals
                                , protein = protein
                                , carbs = carbs
                                , fat = fat
@@ -78,11 +81,40 @@ instance ToJSON Macros
 instance FromJSON Macros
 
 main :: IO ()
-main = fileContent >>= display
+main = fileContent >>= display . addDietTotals
 
 display :: Show a => Maybe a -> IO ()
 display Nothing      = BS.putStrLn "Nothing found"
 display (Just found) = BS.putStrLn $ BS.pack $ show found
+
+addDietTotals :: Maybe TargetAndDiet -> Maybe Macros
+addDietTotals Nothing  = Nothing
+addDietTotals (Just x) = Just $ runSumMacros $ foldMap (SumMacros . calcMacros) $ diet x
+
+newtype SumMacros = SumMacros {runSumMacros :: Macros} deriving Show
+
+instance Monoid SumMacros where
+  mappend (SumMacros mac1) (SumMacros mac2) = SumMacros $ Macros {
+                                                                calories = calories mac1 + calories mac2
+                                                              , protein  = protein mac1 + protein mac2
+                                                              , carbs    = carbs mac1 + carbs mac2
+                                                              , fat      = fat mac1 + fat mac2
+                                                              }
+  mempty = SumMacros $ Macros {
+                           calories = 0
+                         , protein  = 0
+                         , carbs    = 0
+                         , fat      = 0
+                         }
+
+-- todo: refactor
+calcMacros :: Foodstuff -> Macros
+calcMacros (Foodstuff (Macros cals prot carbs fat) (Quantity x) _) = Macros {
+                                                                         calories = cals * x
+                                                                       , protein  = prot * x
+                                                                       , carbs    = carbs * x
+                                                                       , fat      = fat * x
+                                                                       }
 
 fileContent :: IO (Maybe TargetAndDiet)
 fileContent = decode <$> fileString
