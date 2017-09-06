@@ -3,20 +3,23 @@
 
 module Calculator (main) where
 
-import GHC.Generics -- limit?
+-- done:
+-- 1. read in target and actual numbers
+-- 2. add up actual numbers
+-- 3. compare totals to target
+-- 4. print comparison
+
+-- todo:
+-- 5. read from food library
+-- 6. error handling
+-- 7. refactor into smaller modules
+
+import GHC.Generics -- todo: limit?
 import System.Environment (getArgs)
 import Data.Yaml ((.:), withObject, FromJSON(parseJSON), ToJSON, decode)
 import Data.ByteString hiding (readFile, putStrLn)
 import qualified Data.ByteString.Char8 as BS (readFile, putStrLn, pack)
 import Data.ByteString.Char8
-
--- done:
--- 1. read in target and actual numbers
--- 2. add up actual numbers
-
--- todo:
--- 3. compare totals to target
--- 4. print comparison
 
 data TargetAndDiet = TargetAndDiet {
     target :: Macros
@@ -97,11 +100,20 @@ instance Monoid SumMacros where
                          }
 
 main :: IO ()
-main = fileContent >>= display . fmap addDietTotals
+main = fileContent >>= display . fmap compareTargetAndTotals
 
 display :: Show a => Maybe a -> IO ()
 display Nothing      = BS.putStrLn "Nothing found"
 display (Just found) = BS.putStrLn $ BS.pack $ show found
+
+compareTargetAndTotals :: TargetAndDiet -> Macros
+compareTargetAndTotals x = comparison (addDietTotals x) (target x) where
+   -- todo: more specific types?
+  comparison :: Macros -> Macros -> Macros
+  comparison totals target = Macros (calories totals - calories target)
+                                    (protein totals - protein target)
+                                    (carbs totals - carbs target)
+                                    (fat totals - fat target)
 
 addDietTotals :: TargetAndDiet -> Macros
 addDietTotals = runSumMacros . foldMap (SumMacros . calcMacros) . diet
@@ -116,10 +128,10 @@ calcMacros (Foodstuff (Macros cals prot carbs fat) (Quantity x) _) = Macros {
                                                                        }
 
 fileContent :: IO (Maybe TargetAndDiet)
-fileContent = decode <$> fileString
+fileContent = decode <$> fileYAML
 
-fileString :: IO ByteString
-fileString = filePath >>= BS.readFile
+fileYAML :: IO ByteString
+fileYAML = filePath >>= BS.readFile
 
 filePath :: IO String
 filePath = flip (!!) 0 <$> getArgs
