@@ -10,9 +10,11 @@ module Calculator (main) where
 -- 4. print comparison
 
 -- todo:
--- 5. read from food library
--- 6. error handling
--- 7. refactor into smaller modules
+-- 5. calc targets based on goals, body
+-- 6. read from food library
+-- 7. error handling
+-- 8. refactor into smaller modules
+-- 9. make suggestions from food library? (graph traversal?)
 
 import GHC.Generics -- todo: limit?
 import System.Environment (getArgs)
