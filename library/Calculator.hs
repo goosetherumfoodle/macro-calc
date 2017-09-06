@@ -64,7 +64,6 @@ instance FromJSON Foodstuff where
                         (Quantity quantity)
                         (FoodName name)
 
-
 data Macros = Macros {
     calories :: Int
   , protein :: Int
@@ -78,26 +77,12 @@ instance FromJSON Quantity
 instance ToJSON Macros
 instance FromJSON Macros
 
-data Dog = Dog {
-    fleas :: Int
-  , breed :: String
-  , dogName :: String
-  } deriving (Generic, Show)
-
-type Dogs = [Dog]
-
-instance ToJSON Dog
-instance FromJSON Dog
-
 main :: IO ()
 main = fileContent >>= display
 
 display :: Show a => Maybe a -> IO ()
 display Nothing      = BS.putStrLn "Nothing found"
 display (Just found) = BS.putStrLn $ BS.pack $ show found
-
-fileContentDog :: IO (Maybe [Dog])
-fileContentDog = decode <$> fileString
 
 fileContent :: IO (Maybe TargetAndDiet)
 fileContent = decode <$> fileString
