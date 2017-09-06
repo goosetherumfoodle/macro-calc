@@ -80,17 +80,6 @@ instance FromJSON Quantity
 instance ToJSON Macros
 instance FromJSON Macros
 
-main :: IO ()
-main = fileContent >>= display . addDietTotals
-
-display :: Show a => Maybe a -> IO ()
-display Nothing      = BS.putStrLn "Nothing found"
-display (Just found) = BS.putStrLn $ BS.pack $ show found
-
-addDietTotals :: Maybe TargetAndDiet -> Maybe Macros
-addDietTotals Nothing  = Nothing
-addDietTotals (Just x) = Just $ runSumMacros $ foldMap (SumMacros . calcMacros) $ diet x
-
 newtype SumMacros = SumMacros {runSumMacros :: Macros} deriving Show
 
 instance Monoid SumMacros where
@@ -106,6 +95,16 @@ instance Monoid SumMacros where
                          , carbs    = 0
                          , fat      = 0
                          }
+
+main :: IO ()
+main = fileContent >>= display . fmap addDietTotals
+
+display :: Show a => Maybe a -> IO ()
+display Nothing      = BS.putStrLn "Nothing found"
+display (Just found) = BS.putStrLn $ BS.pack $ show found
+
+addDietTotals :: TargetAndDiet -> Macros
+addDietTotals = runSumMacros . foldMap (SumMacros . calcMacros) . diet
 
 -- todo: refactor
 calcMacros :: Foodstuff -> Macros
