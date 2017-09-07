@@ -14,7 +14,8 @@ module Calculator (main) where
 -- 6. read from food library
 -- 7. error handling
 -- 8. refactor into smaller modules
--- 9. make suggestions from food library? (graph traversal?)
+-- 9. strategy for units?
+-- 10. make suggestions from food library? (graph traversal?)
 
 import System.Environment (getArgs)
 import Data.Yaml (decode)
