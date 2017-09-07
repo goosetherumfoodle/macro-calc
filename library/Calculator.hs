@@ -31,7 +31,7 @@ display Nothing      = BS.putStrLn "Nothing found"
 display (Just found) = BS.putStrLn $ BS.pack $ show found
 
 compareTargetAndTotals :: TargetAndDiet -> Macros
-compareTargetAndTotals x = comparison (addDietTotals x) (target x) where
+compareTargetAndTotals = comparison <$> addDietTotals <*> target where
    -- todo: more specific types?
   comparison :: Macros -> Macros -> Macros
   comparison totals target = Macros (calories totals - calories target)
