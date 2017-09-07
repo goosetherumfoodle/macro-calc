@@ -1,0 +1,83 @@
+- name: egg
+  calories: 72
+  protein: 6
+  carbs: 0
+  fat: 5
+
+- name: oatmeal # 20 g serving
+  calories: 70
+  fat: 2
+  carbs: 14
+  protein: 3
+
+- name: banana # "medium" on myfitnesspall
+  calories: 105
+  fat: 0
+  carbs: 27
+  protein: 1
+
+- name: 'ground-beef-90%' # 1 oz
+  calories: 50
+  fat: 3
+  carbs: 0
+  protein: 6
+
+- name: salad # http://www.myfitnesspal.com/food/calories/187408776
+  calories: 48
+  protein: 2
+  carbs: 11
+  fat: 1
+
+- name: apple # http://www.myfitnesspal.com/food/calories/450759930
+  calories: 365
+  fat: 13
+  carbs: 15
+  protein: 5 # website says 42?!
+
+- name: white-rice # 1 cup # http://www.myfitnesspal.com/food/calories/449756391
+  calories: 242
+  protein: 4
+  carbs: 53
+  fat: 0
+
+- name: protein-powder-lean-pro-8-chocolate # http://www.labrada.com/store/LeanPro8.html
+  calories: 215
+  fat: 7
+  carbs: 13
+  protein: 25
+
+- name: almond-butter # 2 tbsp http://www.myfitnesspal.com/food/calories/269096862
+  calories: 421
+  fat: 23
+  carbs: 30
+  protein: 22
+
+- name: yams # 5.3 oz http://www.myfitnesspal.com/food/calories/415405140
+  calories: 177
+  fat: 0
+  carbs: 42
+  protein: 2
+
+- name: broccoli-ranch # 1 cup - bird's eye ranch broccoli microwave bag
+  calories: 50
+  fat: 2
+  carbs: 5
+  protein: 2
+
+- name: greek-yogurt # small chobani - pumpkin spice
+  calories: 120
+  fat: 3
+  carbs: 14
+  protein: 12
+
+- name: pork-tenderloin # 1 oz - http://www.myfitnesspal.com/food/calories/292454064
+  calories: 28
+  fat: 1
+  carbs: 0
+  protein: 5
+
+- name: milk-whole # 1 cup
+  calories: 150
+  fat: 8
+  carbs: 13
+  protein: 8
