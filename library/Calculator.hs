@@ -18,17 +18,17 @@ module Calculator (main) where
 -- 10. make suggestions from food library? (graph traversal?)
 
 import System.Environment (getArgs)
-import Data.Yaml (decode)
+import Data.Yaml (decodeEither', ParseException)
 import Data.ByteString hiding (readFile, putStrLn)
-import qualified Data.ByteString.Char8 as BS (readFile, putStrLn, pack)
+import qualified Data.ByteString.Char8 as BS (concat, readFile, putStrLn, pack)
 import Types
 
 main :: IO ()
-main = fileContent >>= display . fmap compareTargetAndTotals
+main = dietPlan >>= display . fmap compareTargetAndTotals
 
-display :: Show a => Maybe a -> IO ()
-display Nothing      = BS.putStrLn "Nothing found"
-display (Just found) = BS.putStrLn $ BS.pack $ show found
+display :: (Show a, Show b) => Either a b -> IO ()
+display (Left error)  = BS.putStrLn $ BS.concat ["Shit! ", BS.pack $ show error]
+display (Right found) = BS.putStrLn $ BS.pack $ show found
 
 compareTargetAndTotals :: TargetAndDiet -> Macros
 compareTargetAndTotals = comparison <$> addDietTotals <*> target where
@@ -51,11 +51,21 @@ calcMacros (Foodstuff (Macros cals prot carbs fat) (Quantity x) _) = Macros {
                                                                        , fat      = fat * x
                                                                        }
 
-fileContent :: IO (Maybe TargetAndDiet)
-fileContent = decode <$> fileYAML
+dietPlan :: IO (Either ParseException TargetAndDiet)
+dietPlan = dietFilePath >>= fileContent
 
-fileYAML :: IO ByteString
-fileYAML = filePath >>= BS.readFile
+-- foodLibrary :: IO (Either ParseException TargetAndDiet)
+-- foodLibrary = fileContent libraryFilePath
 
-filePath :: IO String
-filePath = flip (!!) 0 <$> getArgs
+fileContent :: String -> IO (Either ParseException TargetAndDiet)
+fileContent path = decodeEither' <$> fileYAML path
+
+fileYAML :: String -> IO ByteString
+fileYAML = BS.readFile
+
+-- todo: use FilePath instead of String?
+dietFilePath :: IO String
+dietFilePath = flip (!!) 0 <$> getArgs
+
+-- libraryFilePath :: String
+-- libraryFilePath = "food-library.yml"
