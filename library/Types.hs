@@ -7,17 +7,36 @@ module Types where
 import GHC.Generics (Generic)
 import Data.Yaml ((.:), withObject, FromJSON(parseJSON), ToJSON)
 
-newtype FoodMacros = FoodMacros Macros deriving (Show, Generic)
-newtype TotalMacros = TotalMacros Macros
-newtype TargetMacros = TargetMacros Macros deriving (Show, Generic)
-newtype DiffMacros = DiffMacros Macros deriving (Show)
-
 data TargetAndDiet = TargetAndDiet {
     target :: TargetMacros
   , diet :: [Foodstuff]
   } deriving (Show, Generic)
 
+data Foodstuff = Foodstuff FoodMacros Quantity FoodName deriving (Show, Generic)
+
+data Macros = Macros {
+    calories :: Int
+  , protein :: Int
+  , carbs :: Int
+  , fat :: Int
+  } deriving (Show, Generic)
+
+newtype FoodMacros = FoodMacros Macros deriving (Show, Generic)
+
+newtype TotalMacros = TotalMacros Macros
+
+newtype TargetMacros = TargetMacros Macros deriving (Show, Generic)
+
+newtype DiffMacros = DiffMacros Macros deriving (Show)
+
+newtype Quantity = Quantity Int deriving (Show, Generic)
+
+newtype FoodName = FoodName String deriving (Show, Generic)
+
+newtype SumMacros = SumMacros {runSumMacros :: TotalMacros}
+
 instance ToJSON TargetAndDiet
+
 instance FromJSON TargetAndDiet where
   parseJSON = withObject "targetAndDiet" $ \o -> do
     target        <- o .: "target"
@@ -35,18 +54,15 @@ instance FromJSON TargetAndDiet where
                    <$> diet
 
 instance ToJSON TargetMacros
+
 instance ToJSON FoodMacros
 
-data Foodstuff = Foodstuff FoodMacros Quantity FoodName deriving (Show, Generic)
-
-newtype Quantity = Quantity Int deriving (Show, Generic)
-
-newtype FoodName = FoodName String deriving (Show, Generic)
-
 instance ToJSON FoodName
+
 instance FromJSON FoodName where
 
 instance ToJSON Foodstuff
+
 instance FromJSON Foodstuff where
   parseJSON = withObject "foodstuff" $ \o -> do
     protein  <- o .: "protein"
@@ -64,20 +80,13 @@ instance FromJSON Foodstuff where
                         (Quantity quantity)
                         (FoodName name)
 
-data Macros = Macros {
-    calories :: Int
-  , protein :: Int
-  , carbs :: Int
-  , fat :: Int
-  } deriving (Show, Generic)
-
 instance ToJSON Quantity
+
 instance FromJSON Quantity
 
 instance ToJSON Macros
-instance FromJSON Macros
 
-newtype SumMacros = SumMacros {runSumMacros :: TotalMacros}
+instance FromJSON Macros
 
 instance Monoid SumMacros where
   mappend (SumMacros (TotalMacros mac1)) (SumMacros (TotalMacros mac2)) = SumMacros $ TotalMacros $ Macros {
