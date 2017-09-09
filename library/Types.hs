@@ -7,8 +7,13 @@ module Types where
 import GHC.Generics (Generic)
 import Data.Yaml ((.:), withObject, FromJSON(parseJSON), ToJSON)
 
+newtype FoodMacros = FoodMacros Macros deriving (Show, Generic)
+newtype TotalMacros = TotalMacros Macros
+newtype TargetMacros = TargetMacros Macros deriving (Show, Generic)
+newtype DiffMacros = DiffMacros Macros deriving (Show)
+
 data TargetAndDiet = TargetAndDiet {
-    target :: Macros
+    target :: TargetMacros
   , diet :: [Foodstuff]
   } deriving (Show, Generic)
 
@@ -21,7 +26,7 @@ instance FromJSON TargetAndDiet where
     targetFat     <- target .: "fat"
     targetCals    <- target .: "calories"
     diet          <- fmap parseJSON $ o .: "diet"
-    TargetAndDiet (Macros {
+    TargetAndDiet (TargetMacros $ Macros {
                         calories = targetCals
                       , protein = targetProtein
                       , carbs = targetCarbs
@@ -29,7 +34,10 @@ instance FromJSON TargetAndDiet where
                       })
                    <$> diet
 
-data Foodstuff = Foodstuff Macros Quantity FoodName deriving (Show, Generic)
+instance ToJSON TargetMacros
+instance ToJSON FoodMacros
+
+data Foodstuff = Foodstuff FoodMacros Quantity FoodName deriving (Show, Generic)
 
 newtype Quantity = Quantity Int deriving (Show, Generic)
 
@@ -47,7 +55,7 @@ instance FromJSON Foodstuff where
     cals     <- o .: "calories"
     name     <- o .: "name"
     quantity <- o .: "quantity"
-    return $ Foodstuff (Macros {
+    return $ Foodstuff (FoodMacros $ Macros {
                                  calories = cals
                                , protein = protein
                                , carbs = carbs
@@ -69,16 +77,16 @@ instance FromJSON Quantity
 instance ToJSON Macros
 instance FromJSON Macros
 
-newtype SumMacros = SumMacros {runSumMacros :: Macros} deriving Show
+newtype SumMacros = SumMacros {runSumMacros :: TotalMacros}
 
 instance Monoid SumMacros where
-  mappend (SumMacros mac1) (SumMacros mac2) = SumMacros $ Macros {
+  mappend (SumMacros (TotalMacros mac1)) (SumMacros (TotalMacros mac2)) = SumMacros $ TotalMacros $ Macros {
                                                                 calories = calories mac1 + calories mac2
                                                               , protein  = protein mac1 + protein mac2
                                                               , carbs    = carbs mac1 + carbs mac2
                                                               , fat      = fat mac1 + fat mac2
                                                               }
-  mempty = SumMacros $ Macros {
+  mempty = SumMacros $ TotalMacros $ Macros {
                            calories = 0
                          , protein  = 0
                          , carbs    = 0

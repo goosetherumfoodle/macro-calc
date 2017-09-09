@@ -30,21 +30,22 @@ display :: (Show a, Show b) => Either a b -> IO ()
 display (Left error)  = BS.putStrLn $ BS.concat ["Shit! ", BS.pack $ show error]
 display (Right found) = BS.putStrLn $ BS.pack $ show found
 
-compareTargetAndTotals :: TargetAndDiet -> Macros
+compareTargetAndTotals :: TargetAndDiet -> DiffMacros
 compareTargetAndTotals = comparison <$> addDietTotals <*> target where
    -- todo: more specific types?
-  comparison :: Macros -> Macros -> Macros
-  comparison totals target = Macros (calories totals - calories target)
-                                    (protein totals - protein target)
-                                    (carbs totals - carbs target)
-                                    (fat totals - fat target)
+  comparison :: TotalMacros -> TargetMacros -> DiffMacros
+  comparison (TotalMacros totals) (TargetMacros target) = DiffMacros $ Macros
+                                                          (calories totals - calories target)
+                                                          (protein totals - protein target)
+                                                          (carbs totals - carbs target)
+                                                          (fat totals - fat target)
 
-addDietTotals :: TargetAndDiet -> Macros
-addDietTotals = runSumMacros . foldMap (SumMacros . calcMacros) . diet
+addDietTotals :: TargetAndDiet -> TotalMacros
+addDietTotals = runSumMacros . foldMap (SumMacros . TotalMacros . calcMacros) . diet
 
 -- todo: refactor
 calcMacros :: Foodstuff -> Macros
-calcMacros (Foodstuff (Macros cals prot carbs fat) (Quantity x) _) = Macros {
+calcMacros (Foodstuff (FoodMacros (Macros cals prot carbs fat)) (Quantity x) _) = Macros {
                                                                          calories = cals * x
                                                                        , protein  = prot * x
                                                                        , carbs    = carbs * x
