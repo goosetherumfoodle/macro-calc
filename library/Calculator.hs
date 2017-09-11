@@ -40,15 +40,15 @@ main :: IO ()
 main = do
   diet <- dietPlan
   lib <- foodLibrary
-  food <- return $ join (fillInMacros <$> lib <*> diet)
+  let food = join (fillInMacros <$> lib <*> diet)
   display $ compareTargetAndTotals <$> food
 
 fillInMacros :: FoodLibrary -> TargetAndDescriptions -> Either String TargetAndFoods
-fillInMacros foodLib tad = TargetAndFoods <$> (Right $ partialTarget tad) <*> (traverse (insertMacros foodLib) $ foodDescriptions tad) where
+fillInMacros foodLib tad = TargetAndFoods <$> (Right $ partialTarget tad) <*> traverse (insertMacros foodLib) (foodDescriptions tad) where
   insertMacros :: FoodLibrary -> FoodDescription -> Either String Food
   insertMacros lib fd = maybeToEither errorMsg $ Food <$> foundMacros <*> Just fd where
-    errorMsg = Prelude.concat ["couldn't find ", (runFoodName $ foodName fd), " in the food library"]
-    foundMacros = FoodMacros <$> (M.lookup (foodName fd) $ runFoodLibrary lib)
+    errorMsg = Prelude.concat ["couldn't find ", runFoodName $ foodName fd, " in the food library"]
+    foundMacros = FoodMacros <$> M.lookup (foodName fd) (runFoodLibrary lib)
 
 display :: (Show a, Show b) => Either a b -> IO ()
 display (Left error)  = BS.putStrLn $ BS.concat ["Shit! ", BS.pack $ show error]
@@ -56,7 +56,6 @@ display (Right found) = BS.putStrLn $ BS.pack $ show found
 
 compareTargetAndTotals :: TargetAndFoods -> DiffMacros
 compareTargetAndTotals = comparison <$> addDietTotals <*> target where
-   -- todo: more specific types?
   comparison :: TotalMacros -> TargetMacros -> DiffMacros
   comparison (TotalMacros totals) (TargetMacros target) = DiffMacros $ Macros
                                                           (calories totals - calories target)
