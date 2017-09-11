@@ -41,6 +41,8 @@ library:
   - bytestring
   - unix
   - transformers
+  - containers
+  - vector
   source-dirs: library
 license: MIT
 maintainer: Author name here
