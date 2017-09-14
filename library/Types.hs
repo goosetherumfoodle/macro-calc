@@ -7,6 +7,8 @@ module Types where
 import GHC.Generics (Generic)
 import Data.Yaml ((.:), withObject, FromJSON(parseJSON), ToJSON)
 import qualified Data.Map as M
+import Control.Exception (Exception)
+import Data.Yaml (ParseException)
 
 data TargetAndFoods = TargetAndFoods {
     target :: TargetMacros
@@ -35,6 +37,47 @@ data Macros = Macros {
   , fat :: Int
   } deriving (Show, Generic)
 
+data ParseExceptionInFile = ParseExceptionInFile ParseException FilePath
+
+data FoodNotInLibrary = FoodNotInLibrary FoodName
+
+data FoodLibEntry = FoodLibEntry FoodName FoodMacros
+
+newtype FoodLibrary = FoodLibrary {runFoodLibrary :: (M.Map FoodName Macros)}
+
+newtype FoodMacros = FoodMacros {runFoodMacros :: Macros} deriving (Show, Generic)
+
+newtype TotalMacros = TotalMacros Macros
+
+newtype TargetMacros = TargetMacros Macros deriving (Show, Generic)
+
+newtype DiffMacros = DiffMacros Macros deriving (Show)
+
+newtype Quantity = Quantity Int deriving (Show, Generic)
+
+newtype FoodName = FoodName {runFoodName :: String} deriving (Show, Generic, Eq, Ord)
+
+newtype SumMacros = SumMacros {runSumMacros :: Macros}
+
+instance Exception ParseExceptionInFile
+
+instance Show ParseExceptionInFile where
+  show (ParseExceptionInFile e path) = concat ["In file ", path, ": ", show e]
+
+instance FromJSON FoodLibEntry where
+  parseJSON = withObject "foodstuff" $ \o -> do
+    protein  <- o .: "protein"
+    carbs    <- o .: "carbs"
+    fat      <- o .: "fat"
+    cals     <- o .: "calories"
+    name     <- o .: "name"
+    return $ FoodLibEntry (FoodName name) (FoodMacros $ Macros {
+                                              calories = cals
+                                              , protein = protein
+                                              , carbs = carbs
+                                              , fat = fat
+                                              })
+
 instance FromJSON FoodDescription where
   parseJSON = withObject "FoodDescription" $ \o -> do
     name <- o .: "name"
@@ -57,38 +100,13 @@ instance FromJSON TargetAndDescriptions where
                       })
                    <$> diet
 
-data FoodLibEntry = FoodLibEntry FoodName FoodMacros
+instance Exception FoodNotInLibrary
 
-instance FromJSON FoodLibEntry where
-  parseJSON = withObject "foodstuff" $ \o -> do
-    protein  <- o .: "protein"
-    carbs    <- o .: "carbs"
-    fat      <- o .: "fat"
-    cals     <- o .: "calories"
-    name     <- o .: "name"
-    return $ FoodLibEntry (FoodName name) (FoodMacros $ Macros {
-                                              calories = cals
-                                              , protein = protein
-                                              , carbs = carbs
-                                              , fat = fat
-                                              })
-
-
-newtype FoodLibrary = FoodLibrary {runFoodLibrary :: (M.Map FoodName Macros)}
-
-newtype FoodMacros = FoodMacros {runFoodMacros :: Macros} deriving (Show, Generic)
-
-newtype TotalMacros = TotalMacros Macros
-
-newtype TargetMacros = TargetMacros Macros deriving (Show, Generic)
-
-newtype DiffMacros = DiffMacros Macros deriving (Show)
-
-newtype Quantity = Quantity Int deriving (Show, Generic)
-
-newtype FoodName = FoodName {runFoodName :: String} deriving (Show, Generic, Eq, Ord)
-
-newtype SumMacros = SumMacros {runSumMacros :: Macros}
+instance Show FoodNotInLibrary where
+  show (FoodNotInLibrary a) = Prelude.concat [ "Shit! A food by the name of \""
+                                             , runFoodName a
+                                             , "\" was found in the diet plan, but not in the food library"
+                                             ]
 
 instance ToJSON TargetAndFoods
 

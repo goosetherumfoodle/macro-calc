@@ -19,40 +19,37 @@ module Calculator (main) where
 -- 10. make suggestions from food library? (graph traversal?)
 
 import System.Environment (getArgs)
-import Data.Yaml (FromJSON, decodeEither')
-import Data.ByteString hiding (readFile, putStrLn)
-import qualified Data.ByteString.Char8 as BS (concat, readFile, putStrLn, pack)
+import Data.Yaml (ParseException, FromJSON, decodeEither')
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import Control.Monad (join)
+import Control.Applicative (liftA2)
+import Control.Exception (SomeException, catch, evaluate, throwIO)
+import System.Exit (exitFailure)
+import System.IO (stderr)
 import Types
 
 -- move to 'nother namespace
-maybeToEither :: a1 -> Maybe a -> Either a1 a
+maybeToEither :: a -> Maybe b -> Either a b
 maybeToEither = flip maybe Right . Left
 
-decodeEither'' :: forall b. (FromJSON b) => ByteString -> Either String b
-decodeEither'' = stringifyException . decodeEither' where
-  stringifyException :: (Show a) => Either a b -> Either String b
-  stringifyException (Left e) = Left $ show e
-  stringifyException (Right a) = Right a
-
 main :: IO ()
-main = do
-  diet <- dietPlan
-  lib <- foodLibrary
-  let food = join (fillInMacros <$> lib <*> diet)
-  display $ compareTargetAndTotals <$> food
+main = let food = join $ fillInMacros <$> foodLibrary <*> dietPlan in
+          (join . fmap display) (compareTargetAndTotals <$> food)
 
-fillInMacros :: FoodLibrary -> TargetAndDescriptions -> Either String TargetAndFoods
-fillInMacros foodLib tad = TargetAndFoods <$> (Right $ partialTarget tad) <*> traverse (insertMacros foodLib) (foodDescriptions tad) where
-  insertMacros :: FoodLibrary -> FoodDescription -> Either String Food
-  insertMacros lib fd = maybeToEither errorMsg $ Food <$> foundMacros <*> Just fd where
-    errorMsg = Prelude.concat ["couldn't find ", runFoodName $ foodName fd, " in the food library"]
-    foundMacros = FoodMacros <$> M.lookup (foodName fd) (runFoodLibrary lib)
+display :: Show a => a -> IO ()
+display = BS.putStrLn . BS.pack . show
 
-display :: (Show a, Show b) => Either a b -> IO ()
-display (Left error)  = BS.putStrLn $ BS.concat ["Shit! ", BS.pack $ show error]
-display (Right found) = BS.putStrLn $ BS.pack $ show found
+-- todo: refactor
+fillInMacros :: FoodLibrary -> TargetAndDescriptions -> IO TargetAndFoods
+fillInMacros foodLib tad = TargetAndFoods (partialTarget tad) <$> sequence ((insertMacros foodLib) <$> foodDescriptions tad) where
+  insertMacros :: FoodLibrary -> FoodDescription -> IO Food
+  insertMacros lib fd = Food <$> foundMacros <*> pure fd where
+    foundMacros :: IO FoodMacros
+    foundMacros = either notFoundFailure (return . FoodMacros) tryLookup
+    tryLookup = maybeToEither (foodName fd) $ M.lookup (foodName fd) (runFoodLibrary lib)
+    notFoundFailure :: FoodName -> IO FoodMacros
+    notFoundFailure name = throwIO (FoodNotInLibrary name) >> exitFailure
 
 compareTargetAndTotals :: TargetAndFoods -> DiffMacros
 compareTargetAndTotals = comparison <$> addDietTotals <*> target where
@@ -76,24 +73,33 @@ calcMacros (Food (FoodMacros (Macros cals prot carbs fat))
                                                        , fat      = fat * x
                                                        }
 
-dietPlan :: IO (Either String TargetAndDescriptions)
-dietPlan = dietFilePath >>= fmap decodeEither'' . fileYAML
+decodeEither'' :: FromJSON a => FilePath -> BS.ByteString -> IO a
+decodeEither'' path s = handleException (decodeEither' s) where
+  handleException :: FromJSON a => Either ParseException a -> IO a
+  handleException (Left e) = throwIO $ ParseExceptionInFile e path
+  handleException (Right a) = return a
 
-foodLibrary :: IO (Either String FoodLibrary)
-foodLibrary = (fmap . fmap) libratize foodList where
-  foodList :: IO (Either String [FoodLibEntry])
-  foodList = decodeEither'' <$> fileYAML libraryFilePath
-  libratize :: [FoodLibEntry] -> FoodLibrary
-  libratize = FoodLibrary . Prelude.foldr go M.empty
+dietPlan :: IO TargetAndDescriptions -- todo: refactor with either
+dietPlan = dietFilePath >>= liftA2 (=<<) decodeEither'' fileYAML
+
+foodLibrary :: IO FoodLibrary
+foodLibrary = libratize <$> parse  where
+  parse :: IO [FoodLibEntry]
+  parse = fileYAML libraryFilePath >>= decodeEither'' libraryFilePath
+
+libratize :: [FoodLibEntry] -> FoodLibrary
+libratize = FoodLibrary . Prelude.foldr go M.empty where
   go :: FoodLibEntry -> M.Map FoodName Macros -> M.Map FoodName Macros
   go (FoodLibEntry name (FoodMacros macros)) = M.insert name macros
 
-fileYAML :: String -> IO ByteString
+fileYAML :: String -> IO BS.ByteString
 fileYAML = BS.readFile
 
--- todo: use FilePath instead of String?
 dietFilePath :: IO String
-dietFilePath = flip (!!) 0 <$> getArgs
+dietFilePath = join (evaluate . (!! 0) <$> getArgs) `catch` handler where
+  handler :: SomeException -> IO String
+  handler _ = do BS.hPutStrLn stderr "Missing required argument: path to diet file"
+                 exitFailure
 
 libraryFilePath :: String
 libraryFilePath = "food-library.yml"
