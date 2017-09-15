@@ -8,12 +8,11 @@ module Calculator (main) where
 -- 2. add up actual numbers
 -- 3. compare totals to target
 -- 4. print comparison
--- 6. read from food library
+-- 5. read from food library
+-- 6. error handling
 
 -- todo:
--- 6.5 refactor
--- 5. calc targets based on goals, body
--- 7. error handling
+-- 7. calc targets based on goals, body
 -- 8. refactor into smaller modules
 -- 9. strategy for units?
 -- 10. make suggestions from food library? (graph traversal?)
