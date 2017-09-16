@@ -14,7 +14,7 @@ benchmarks:
     main: Main.hs
     source-dirs: benchmark
 category: Other
-description: nutrition is a new Haskeleton package.
+description: Calculate difference between macros in diet and target goals.
 executables:
   nutrition:
     dependencies:
@@ -48,7 +48,7 @@ library:
 # license: none
 maintainer: Author name here
 name: nutrition
-synopsis: A new Haskeleton package.
+synopsis: Calculate difference between macros in diet and target goals.
 tests:
   nutrition-test-suite:
     dependencies:
