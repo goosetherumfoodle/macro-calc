@@ -28,10 +28,11 @@ executables:
     source-dirs: executable
 extra-source-files:
 - CHANGELOG.md
-- LICENSE.md
 - package.yaml
 - README.md
 - stack.yaml
+- food-library.yml
+- example-plan.yml
 ghc-options: -Wall
 github: githubuser/nutrition
 library:
@@ -44,7 +45,7 @@ library:
   - containers
   - vector
   source-dirs: library
-license: MIT
+# license: none
 maintainer: Author name here
 name: nutrition
 synopsis: A new Haskeleton package.

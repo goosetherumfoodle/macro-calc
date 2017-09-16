@@ -42,11 +42,16 @@ display = BS.putStrLn . BS.pack . show
 -- todo: refactor
 fillInMacros :: FoodLibrary -> TargetAndDescriptions -> IO TargetAndFoods
 fillInMacros foodLib tad = TargetAndFoods (partialTarget tad) <$> sequence ((insertMacros foodLib) <$> foodDescriptions tad) where
+
   insertMacros :: FoodLibrary -> FoodDescription -> IO Food
   insertMacros lib fd = Food <$> foundMacros <*> pure fd where
+
     foundMacros :: IO FoodMacros
     foundMacros = either notFoundFailure (return . FoodMacros) tryLookup
+
+    tryLookup :: Either FoodName Macros
     tryLookup = maybeToEither (foodName fd) $ M.lookup (foodName fd) (runFoodLibrary lib)
+
     notFoundFailure :: FoodName -> IO FoodMacros
     notFoundFailure name = throwIO (FoodNotInLibrary name) >> exitFailure
 

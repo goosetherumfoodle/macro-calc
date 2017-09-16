@@ -149,24 +149,6 @@ instance ToJSON Macros
 
 instance FromJSON Macros
 
--- instance FromJSON FoodLibrary where
---   parseJSON = withArray "food library" $ \a -> do
---     foldr (FoodLibrary . getFood) M.empty a where
---       getFood acc o = do
---         name    <- o .: "name"
---         protein <- o .: "protein"
---         carbs   <- o .: "carbs"
---         fat     <- o .: "fat"
---         cals    <- o .: "calories"
---         M.insert (FoodName name)
---                                         (Macros {
---                                            calories = cals
---                                          , protein = protein
---                                          , carbs = carbs
---                                          , fat = fat
---                                          })
---                                          acc
-
 instance FromJSON Food where -- todo: rename to FoodServing?
   parseJSON = withObject "foodstuff" $ \o -> do
     protein  <- o .: "protein"
